@@ -1,0 +1,72 @@
+<div class="upload-shell">
+  <div class="upload-card" *ngIf="!showProgress && !completedJob">
+    <div class="card-header">
+      <h2>Generar Resumen de Audio</h2>
+      <p>Sube un archivo compatible con AssemblyAI y recibe resumen por email.</p>
+    </div>
+
+    <form [formGroup]="uploadForm" (ngSubmit)="onSubmit()" class="upload-form">
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" formControlName="email" placeholder="tu@email.com" />
+      </div>
+
+      <div
+        class="drop-zone"
+        [class.drag-over]="isDragOver"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)">
+        <input id="audioFile" type="file" #fileInput [accept]="allowedExtensions.join(',')" (change)="onFileSelected($event)" hidden />
+        <button type="button" class="drop-trigger" (click)="fileInput.click()">
+          <span class="drop-title">Arrastra tu archivo aqui o haz clic para seleccionar</span>
+          <span class="drop-subtitle">Formatos soportados: {{ allowedExtensions.join(', ') }}</span>
+        </button>
+      </div>
+
+      <div class="file-selected" *ngIf="selectedFile">
+        <span>{{ selectedFile.name }}</span>
+        <button type="button" (click)="selectedFile = null">Quitar</button>
+      </div>
+
+      <button type="submit" class="btn-primary" [disabled]="isLoading || !selectedFile || uploadForm.invalid">
+        <span *ngIf="!isLoading">Iniciar procesamiento</span>
+        <span *ngIf="isLoading">Subiendo...</span>
+      </button>
+    </form>
+  </div>
+
+  <div class="upload-card" *ngIf="showProgress">
+    <div class="card-header">
+      <h2>{{ progressMessage }}</h2>
+      <p>Job #{{ currentJob?.jobId }} - {{ currentJob?.statusDetail || currentJob?.status }}</p>
+    </div>
+
+    <div class="progress-bar-wrapper" *ngIf="currentJob">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" [style.width.%]="currentJob.progressPercent || 0"></div>
+      </div>
+      <p class="progress-percent">{{ currentJob.progressPercent || 0 }}%</p>
+    </div>
+
+    <p class="hint">No cierres esta pagina; te enviaremos email al finalizar.</p>
+  </div>
+
+  <div class="upload-card" *ngIf="completedJob">
+    <div class="card-header">
+      <h2>Resumen listo</h2>
+      <p>Procesado en {{ completedJob.processingTimeMs! / 1000 }} segundos</p>
+    </div>
+
+    <div class="summary-box">
+      <h3>Mini resumen</h3>
+      <p>{{ completedJob.miniSummary }}</p>
+    </div>
+
+    <button class="btn-primary" (click)="resetForm()">Procesar otro audio</button>
+  </div>
+
+  <div class="error-box" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+</div>
